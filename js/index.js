@@ -124,7 +124,9 @@ let player = new Player({
   y: 100,
   size: 32,
   velocity: { x: 0, y: 0 },
+  jumpCount: 0, // ตัวแปรในการนับจำนวนครั้งที่กระโดด
 })
+
 
 let oposums = []
 let eagles = []
@@ -501,40 +503,43 @@ function animate(backgroundCanvas) {
   for (let i = gems.length - 1; i >= 0; i--) {
     const gem = gems[i]
     gem.update(deltaTime)
+// THIS IS WHERE WE ARE COLLECTING GEMS
+const collisionDirection = checkCollisions(player, gem)
+if (collisionDirection) {
+  // create an item feedback animation
+  sprites.push(
+    new Sprite({
+      x: gem.x - 8,
+      y: gem.y - 8,
+      width: 32,
+      height: 32,
+      imageSrc: './images/item-feedback.png',
+      spriteCropbox: {
+        x: 0,
+        y: 0,
+        width: 32,
+        height: 32,
+        frames: 5,
+      },
+    }),
+  )
 
-    // THIS IS WHERE WE ARE COLLECTING GEMS
-    const collisionDirection = checkCollisions(player, gem)
-    if (collisionDirection) {
-      // create an item feedback animation
-      sprites.push(
-        new Sprite({
-          x: gem.x - 8,
-          y: gem.y - 8,
-          width: 32,
-          height: 32,
-          imageSrc: './images/item-feedback.png',
-          spriteCropbox: {
-            x: 0,
-            y: 0,
-            width: 32,
-            height: 32,
-            frames: 5,
-          },
-        }),
-      )
+  // remove a gem from the game
+  gems.splice(i, 1)
+  gemCount++
 
-      // remove a gem from the game
-      gems.splice(i, 1)
-      gemCount++
+  if (gemCount === 51) {
+    console.log('YOU WIN!')
+    init()  // เริ่มเกมใหม่เมื่อเก็บครบ 51 เพชร
+    startRendering()  // เริ่มการเรนเดอร์ใหม่
+  }
+}
 
-      if (gems.length === 0) {
-        console.log('YOU WIN!')
-      }
-    }
+
   }
 
   // Track scroll post distance
-  if (player.x > SCROLL_POST_RIGHT && player.x < 1680) {
+  if (player.x > SCROLL_POST_RIGHT && player.x < 2010) {
     const scrollPostDistance = player.x - SCROLL_POST_RIGHT
     camera.x = scrollPostDistance
   }
@@ -578,7 +583,7 @@ function animate(backgroundCanvas) {
     gem.draw(c)
   }
 
-  c.fillRect(SCROLL_POST_RIGHT2, 200, 10, 100)
+  // c.fillRect(SCROLL_POST_RIGHT2, 200, 10, 100)
   // c.fillRect(300, SCROLL_POST_TOP, 100, 10)
   // c.fillRect(300, SCROLL_POST_BOTTOM, 100, 10)
   c.restore()
